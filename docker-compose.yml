@@ -7,27 +7,30 @@ services:
     hostname: redis
 
   web:
+    image: brian32768/pylette:latest
     build:
       context: .
       dockerfile: Dockerfile
-    hostname: web
-    command: ./scripts/run_server.sh
+    command: scripts/run_server.sh
+    user: app
     volumes:
-      - .:/app 
+      - .:/srv/pylette
     ports:
-      - "5000:5000"
+      - "5100:5000"
     links:
       - redis
 
   worker:
+    image: brian32768/pylette:latest
     build:
       context: .
       dockerfile: Dockerfile
-    command: ./scripts/run_celery.sh
+    command: scripts/run_celery.sh
+    user: app
     volumes:
-      - .:/app
+      - .:/srv/pylette
     links:
       - redis
     environment:
-        - CELERY_BROKER=redis://redis:6379/0
-        - CELERY_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0

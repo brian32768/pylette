@@ -11,15 +11,23 @@ from werkzeug.utils import secure_filename
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from flask import Flask, redirect, render_template, request, send_from_directory
-from flask_celery import make_celery
+from celery_factory import make_celery
 
 config_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir, "config.yml"))
-config = yaml.load(open(config_path))
 
-app = Flask(__name__)
-app.config.update(config)
+def make_app(configuration): 
+    """ Factory that makes a Flask application. """
 
+    app = Flask(__name__)
+    app.config.from_object(configuration)
+    return app
+
+
+# make_celery is a factory that will return 
+# a celery object when called from the Celery CLI
+# in the docker_compose.yml command.
 celery = make_celery(app)
+
 
 logger = logging.getLogger(__name__)
 celery_logger = get_task_logger(__name__)
@@ -143,7 +151,3 @@ def processing(filename):
     plt.savefig(file_path)
     celery_logger.info(f'processing {filename} is completed : {color_labels}')
     return filename
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
